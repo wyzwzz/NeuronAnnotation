@@ -19,8 +19,11 @@
 
 #include <glm/glm.hpp>
 
+#ifdef _WINDOWS
 #define WIN_API __declspec(dllexport)
-
+#else
+#define WIN_API
+#endif
 
 #define FLOAT_ZERO 0.00001f
 

@@ -15,8 +15,8 @@
 
 #ifdef _WINDOWS
 #include<glad/wgl.h>
-#elif LINUX
-#include<glad/gl.h>
+#else
+#include<glad/glad.h>
 #endif
 namespace sv{
 

@@ -18,9 +18,13 @@ void WebSocketRequestHandler::handleRequest(
     using WebSocket = Poco::Net::WebSocket;
 
     Application &app = Application::instance();
-    std::cout<<"loading render backend..."<<std::endl;
     VolumeRenderer block_volume_renderer("BlockVolumeRenderer");
+    std::cout<<"loading render backend..."<<std::endl;
+#ifdef _WINDOWS
     block_volume_renderer.set_volume("E:/mouse_23389_29581_10296_512_2_lod3/mouse_23389_29581_10296_9p2_lod3.h264");
+#else
+    block_volume_renderer.set_volume("/media/wyz/Workspace/mouse_23389_29581_10296_512_2_lod3/mouse_23389_29581_10296_9p2_lod3.h264");
+#endif
     TransferFunction default_tf;
     default_tf.points.emplace_back(0);
     default_tf.colors.emplace_back(std::array<double ,4>{0.0,0.1,0.6,0.0});

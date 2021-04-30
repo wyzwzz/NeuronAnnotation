@@ -4,11 +4,37 @@
 
 #include"BlockVolumeRenderer.hpp"
 
-#include <Common/wgl_wrap.hpp>
-
 #ifdef _WINDOWS
+#include <Common/wgl_wrap.hpp>
 #define WGL_NV_gpu_affinity
+#else
+#include<EGL/egl.h>
+#include<EGL/eglext.h>
+const EGLint egl_config_attribs[] = {EGL_SURFACE_TYPE,
+                                     EGL_PBUFFER_BIT,
+                                     EGL_BLUE_SIZE,
+                                     8,
+                                     EGL_GREEN_SIZE,
+                                     8,
+                                     EGL_RED_SIZE,
+                                     8,
+                                     EGL_DEPTH_SIZE,
+                                     8,
+                                     EGL_RENDERABLE_TYPE,
+                                     EGL_OPENGL_BIT,
+                                     EGL_NONE};
+
+
+
+void EGLCheck(const char *fn) {
+    EGLint error = eglGetError();
+
+    if (error != EGL_SUCCESS) {
+        throw runtime_error(fn + to_string(error));
+    }
+}
 #endif
+
 #include <cudaGL.h>
 
 #include <Common/transferfunction_impl.h>
@@ -168,7 +194,68 @@ void BlockVolumeRenderer::initGL() {
     HWND window=create_window(ins,("wgl_invisable"+idx).c_str(),window_width,window_height);
     this->window_handle=GetDC(window);
     this->gl_context=create_opengl_context(this->window_handle);
-#elif LINUX
+#else
+    static const int MAX_DEVICES = 4;
+    EGLDeviceEXT egl_devices[MAX_DEVICES];
+    EGLint num_devices;
+
+    auto eglQueryDevicesEXT =
+            (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT");
+    eglQueryDevicesEXT(4, egl_devices, &num_devices);
+
+    auto eglGetPlatformDisplayEXT =
+            (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress(
+                    "eglGetPlatformDisplayEXT");
+
+    auto m_egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT,
+                                                  egl_devices[0], nullptr);
+    EGLCheck("eglGetDisplay");
+
+    EGLint major, minor;
+    eglInitialize(m_egl_display, &major, &minor);
+    EGLCheck("eglInitialize");
+
+    EGLint num_configs;
+    EGLConfig egl_config;
+
+    eglChooseConfig(m_egl_display, egl_config_attribs, &egl_config, 1,
+                    &num_configs);
+    EGLCheck("eglChooseConfig");
+
+    const EGLint pbuffer_attribs[] = {
+            EGL_WIDTH, (EGLint)window_width, EGL_HEIGHT, (EGLint)window_height, EGL_NONE,
+    };
+    EGLSurface egl_surface =
+            eglCreatePbufferSurface(m_egl_display, egl_config, pbuffer_attribs);
+    EGLCheck("eglCreatePbufferSurface");
+
+    eglBindAPI(EGL_OPENGL_API);
+    EGLCheck("eglBindAPI");
+
+    const EGLint context_attri[] = {EGL_CONTEXT_MAJOR_VERSION,
+                                    4,
+                                    EGL_CONTEXT_MINOR_VERSION,
+                                    6,
+                                    EGL_CONTEXT_OPENGL_PROFILE_MASK,
+                                    EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+                                    EGL_NONE};
+    EGLContext egl_context = eglCreateContext(m_egl_display, egl_config,
+                                              EGL_NO_CONTEXT, context_attri);
+    EGLCheck("eglCreateContext");
+
+    eglMakeCurrent(m_egl_display, egl_surface, egl_surface, egl_context);
+    EGLCheck("eglMakeCurrent");
+
+    if (!gladLoadGLLoader((void *(*)(const char *))(&eglGetProcAddress))) {
+        throw runtime_error("Failed to load gl");
+    }
+
+    std::cout << "OpenGLVolumeRenderer: Detected " << std::to_string(num_devices)
+              << " devices, using first one, OpenGL "
+                 "version "
+              << std::to_string(GLVersion.major) << "."
+              << std::to_string(GLVersion.minor) << std::endl;
+    glEnable(GL_DEPTH_TEST);
 
 #endif
 }
@@ -297,8 +384,8 @@ void BlockVolumeRenderer::createGLSampler() {
     GL_EXPR(glSamplerParameterfv(gl_sampler,GL_TEXTURE_BORDER_COLOR,color));
 }
 void BlockVolumeRenderer::createGLShader() {
-    raycasting_shader=std::make_unique<sv::Shader>("C:\\Users\\wyz\\projects\\NeuronAnnotation\\src\\Render\\Shaders\\block_raycast_v.glsl",
-                                                   "C:\\Users\\wyz\\projects\\NeuronAnnotation\\src\\Render\\Shaders\\block_raycast_f.glsl");
+    raycasting_shader=std::make_unique<sv::Shader>("../../src/Render/Shaders/block_raycast_v.glsl",
+                                                   "../../src/Render/Shaders/block_raycast_f.glsl");
 //    raycasting_shader->setShader(shader::mix_block_raycast_v,shader::mix_block_raycast_f,nullptr);
 
 }

@@ -7,13 +7,15 @@
 #include<stdexcept>
 #include<functional>
 
-#ifdef LINUX
-#include <dlfcn.h>
-#elif _WINDOWS
+#ifdef _WINDOWS
 #include <Windows.h>
+typedef int (__cdecl *MYPROC)(LPWSTR);
+#else
+#include <dlfcn.h>
 #endif
 
-typedef int (__cdecl *MYPROC)(LPWSTR);
+
+
 VolumeRenderer::VolumeRenderer(const char *renderer) {
     renderer_name=renderer;
     std::string postfix;
@@ -21,19 +23,19 @@ VolumeRenderer::VolumeRenderer(const char *renderer) {
     postfix = "d";
 #endif
 
-#ifdef LINUX
-    auto lib_name = string("libvoxer_renderer_") + renderer + postfix + ".so";
+#ifndef _WINDOWS
+    auto lib_name = std::string("lib") + renderer + postfix + ".so";
     void *lib = dlopen(lib_name.c_str(), RTLD_NOW);
     if (lib == nullptr) {
-      throw runtime_error(dlerror());
+      throw std::runtime_error(dlerror());
     }
-    void *symbol = dlsym(lib, "voxer_get_renderer");
+    void *symbol = dlsym(lib, "get_renderer");
 
     if (symbol == nullptr) {
-      throw runtime_error("Cannot find symbol `voxer_get_renderer` in " +
+      throw std::runtime_error("Cannot find symbol `voxer_get_renderer` in " +
                           lib_name);
     }
-#elif _WINDOWS
+#else
     auto lib_name =  renderer + postfix + ".dll";
     wchar_t win_lib_name[100];
     swprintf(win_lib_name,100,L"%hs",lib_name.c_str());
