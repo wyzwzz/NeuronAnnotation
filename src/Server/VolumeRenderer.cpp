@@ -6,6 +6,7 @@
 #include<string>
 #include<stdexcept>
 #include<functional>
+
 #ifdef LINUX
 #include <dlfcn.h>
 #elif _WINDOWS

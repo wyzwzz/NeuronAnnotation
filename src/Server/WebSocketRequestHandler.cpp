@@ -33,7 +33,6 @@ void WebSocketRequestHandler::handleRequest(
     default_tf.points.emplace_back(225);
     default_tf.colors.emplace_back(std::array<double ,4>{0.6,0.1,0.0,0.0});
     block_volume_renderer.set_transferfunc(default_tf);
-    //todo register camera... etc
 
     try
     {

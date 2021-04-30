@@ -4,15 +4,28 @@ find_package(CUDA REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 
-list(
-        APPEND
-        BlockVolumeRenderer_SRCS
-        BlockVolumeRenderer.cpp
-        Image.cpp
-        Data/BlockVolumeManager.cpp
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
-)
+if(WIN32)
+    list(
+            APPEND
+            BlockVolumeRenderer_SRCS
+            BlockVolumeRenderer.cpp
+            Image.cpp
+            Data/BlockVolumeManager.cpp
+            ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
+            ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
+    )
+    set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include)
+elseif(UNIX)
+    list(
+            APPEND
+            BlockVolumeRenderer_SRCS
+            BlockVolumeRenderer.cpp
+            Image.cpp
+            Data/BlockVolumeManager.cpp
+            ${PROJECT_SOURCE_DIR}/third_party/glad/src/gl.c
+    )
+    set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/glad/include)
+endif()
 
 add_library(BlockVolumeRenderer SHARED ${BlockVolumeRenderer_SRCS})
 
@@ -20,7 +33,7 @@ target_include_directories(
         BlockVolumeRenderer
         PRIVATE
         ${CUDA_INCLUDE_DIRS}
-        ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/include
+        ${GLAD_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/third_party
 )
 

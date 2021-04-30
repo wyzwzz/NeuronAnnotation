@@ -11,10 +11,13 @@
 #include<fstream>
 #include<sstream>
 #include<iostream>
-
-#include<glad/wgl.h>
 #include<glm/glm.hpp>
 
+#ifdef _WINDOWS
+#include<glad/wgl.h>
+#elif LINUX
+#include<glad/gl.h>
+#endif
 namespace sv{
 
     class Shader{

@@ -5,7 +5,11 @@
 #ifndef NEURONANNOTATION_BLOCKVOLUMERENDERER_H
 #define NEURONANNOTATION_BLOCKVOLUMERENDERER_H
 #include "IRenderer.hpp"
+
+#ifdef _WINDOWS
 #include <windows.h>
+#endif
+
 #include <Common/utils.hpp>
 #include <unordered_set>
 #include <Common/boundingbox.hpp>
@@ -134,8 +138,14 @@ private:
 
     std::unique_ptr<sv::Shader> raycasting_shader;
 
+#ifdef _WINDOWS
     HDC window_handle;
     HGLRC gl_context;
+#elif LINUX
+
+#endif
+
+
     uint32_t window_width,window_height;
 
     sv::OBB view_obb;

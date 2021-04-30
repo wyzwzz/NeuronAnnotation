@@ -5,12 +5,18 @@
 #include"BlockVolumeRenderer.hpp"
 
 #include <Common/wgl_wrap.hpp>
+
+#ifdef _WINDOWS
 #define WGL_NV_gpu_affinity
+#endif
 #include <cudaGL.h>
+
 #include <Common/transferfunction_impl.h>
 #include <Common/help_gl.hpp>
 #include <random>
+
 #include "Shaders.hpp"
+
 extern "C"
 {
     WIN_API IRenderer* get_renderer(){
@@ -153,6 +159,7 @@ void BlockVolumeRenderer::createResource() {
 }
 
 void BlockVolumeRenderer::initGL() {
+#ifdef _WINDOWS
     auto ins=GetModuleHandle(NULL);
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -161,6 +168,9 @@ void BlockVolumeRenderer::initGL() {
     HWND window=create_window(ins,("wgl_invisable"+idx).c_str(),window_width,window_height);
     this->window_handle=GetDC(window);
     this->gl_context=create_opengl_context(this->window_handle);
+#elif LINUX
+
+#endif
 }
 
 void BlockVolumeRenderer::initCUDA() {
