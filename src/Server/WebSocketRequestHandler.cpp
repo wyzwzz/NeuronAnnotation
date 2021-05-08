@@ -29,13 +29,13 @@ void WebSocketRequestHandler::handleRequest(
     default_tf.points.emplace_back(0);
     default_tf.colors.emplace_back(std::array<double ,4>{0.0,0.1,0.6,0.0});
     default_tf.points.emplace_back(30);
-    default_tf.colors.emplace_back(std::array<double ,4>{0.25, 0.5, 1.0, 0.3});
+    default_tf.colors.emplace_back(std::array<double ,4>{0.25, 0.5, 1.0, 0.9});
     default_tf.points.emplace_back(64);
-    default_tf.colors.emplace_back(std::array<double ,4>{0.75,0.75,0.75,0.6});
+    default_tf.colors.emplace_back(std::array<double ,4>{0.75,0.75,0.75,0.9});
     default_tf.points.emplace_back(224);
-    default_tf.colors.emplace_back(std::array<double ,4>{1.0,0.5,0.25,0.6});
+    default_tf.colors.emplace_back(std::array<double ,4>{1.0,0.5,0.25,0.9});
     default_tf.points.emplace_back(225);
-    default_tf.colors.emplace_back(std::array<double ,4>{0.6,0.1,0.0,0.0});
+    default_tf.colors.emplace_back(std::array<double ,4>{0.6,0.1,0.0,1.0});
     block_volume_renderer.set_transferfunc(default_tf);
 
     try
@@ -69,11 +69,17 @@ void WebSocketRequestHandler::handleRequest(
                 }
                 else if(document.HasMember("click"))
                 {
-
+                    auto values=objects["click"].GetObject();
+                    QueryPoint query_point;
+                    seria::deserialize(query_point,values);
+                    block_volume_renderer.set_querypoint({query_point.x,query_point.y});
                 }
                 block_volume_renderer.render_frame();
                 auto &image = block_volume_renderer.get_frame();
                 auto encoded = Image::encode(image, Image::Format::JPEG);
+                auto query_res=block_volume_renderer.get_querypoint();
+                std::cout<<"pos: "<<query_res[0]<<" "<<query_res[1]<<" "<<query_res[2]<<" "<<query_res[3]<<std::endl;
+                std::cout<<"color: "<<query_res[4]<<" "<<query_res[5]<<" "<<query_res[6]<<" "<<query_res[7]<<std::endl;
                 ws.sendFrame(encoded.data.data(), encoded.data.size(),WebSocket::FRAME_BINARY);
             }
             catch (std::exception& error)

@@ -50,7 +50,7 @@ extern "C"
     }
 }
 BlockVolumeRenderer::BlockVolumeRenderer(int w, int h)
-:window_width(w),window_height(h)
+:window_width(w),window_height(h),query(false)
 {
     if(w>2048 || h>2048 || w<1 || h<1){
         throw std::runtime_error("bad width or height");
@@ -118,8 +118,14 @@ void BlockVolumeRenderer::set_transferfunc(TransferFunction tf) noexcept {
 void BlockVolumeRenderer::set_mousekeyevent(MouseKeyEvent event) noexcept {
 
 }
+void BlockVolumeRenderer::set_querypoint(std::array<uint32_t, 2> screen_pos) noexcept {
+    this->query_point=screen_pos;
+    query=true;
+}
+
 
 void BlockVolumeRenderer::render_frame() {
+    START_CPU_TIMER
     GL_CHECK
     setupRuntimeResource();
 
@@ -155,7 +161,10 @@ void BlockVolumeRenderer::render_frame() {
 
     glFinish();
 
+    query=false;
+
     GL_CHECK
+    END_CPU_TIMER
 }
 
 auto BlockVolumeRenderer::get_frame() -> const Image & {
@@ -167,6 +176,17 @@ auto BlockVolumeRenderer::get_frame() -> const Image & {
     glReadPixels(0, 0, frame.width, frame.height, GL_RGB, GL_UNSIGNED_BYTE,
                  reinterpret_cast<void *>(frame.data.data()));
     return frame;
+}
+auto BlockVolumeRenderer::get_querypoint() -> const std::array<float, 8> {
+
+    return std::array<float, 8>{query_point_result[0],
+                                query_point_result[1],
+                                query_point_result[2],
+                                query_point_result[3],
+                                query_point_result[4],
+                                query_point_result[5],
+                                query_point_result[6],
+                                query_point_result[7]};
 }
 
 void BlockVolumeRenderer::clear_scene() {
@@ -299,6 +319,7 @@ void BlockVolumeRenderer::createCUDAResource() {
 
 void BlockVolumeRenderer::createUtilResource() {
     createVirtualBoxes();
+    createQueryPoint();
 }
 
 void BlockVolumeRenderer::createVolumeTexManager() {
@@ -412,6 +433,7 @@ void BlockVolumeRenderer::createVirtualBoxes() {
             }
         }
     }
+//    std::cout<<"finish "<<__FUNCTION__ <<std::endl;
 }
 
 void BlockVolumeRenderer::setupRuntimeResource() {
@@ -426,6 +448,7 @@ void BlockVolumeRenderer::setupRuntimeResource() {
 #define B_VOL_TEX_2_BINDING 4
 
 void BlockVolumeRenderer::setupShaderUniform() {
+//    spdlog::info("{0}",__FUNCTION__ );
     raycasting_shader->use();
     raycasting_shader->setInt("transfer_func",B_TF_TEX_BINDING);
     raycasting_shader->setInt("preInt_transfer_func",B_PTF_TEX_BINDING);
@@ -447,7 +470,7 @@ void BlockVolumeRenderer::setupShaderUniform() {
     float space=camera.f*tanf(glm::radians(camera.zoom/2))*2/window_height;
     raycasting_shader->setFloat("view_right_space",space);
     raycasting_shader->setFloat("view_up_space",space);
-    raycasting_shader->setFloat("step",1.f);
+    raycasting_shader->setFloat("step",0.3f);
 
     raycasting_shader->setVec4("bg_color",0.f,0.f,0.f,0.f);
     raycasting_shader->setInt("block_length",block_length);
@@ -461,10 +484,19 @@ void BlockVolumeRenderer::setupShaderUniform() {
     raycasting_shader->setFloat("ks",1.0f);
     raycasting_shader->setVec3("light_direction",glm::normalize(glm::vec3(-1.0f,-1.0f,-1.0f)));
 
+    if(query){
+        glm::ivec2 _query_point={query_point[0],window_height-query_point[1]};
+        raycasting_shader->setIVec2("query_point",_query_point);
+        raycasting_shader->setBool("query",true);
+    }
+    else{
+        raycasting_shader->setBool("query",false);
+    }
 }
 
 
 void BlockVolumeRenderer::bindGLTextureUnit() {
+//    spdlog::info("{0}",__FUNCTION__ );
     GL_EXPR(glBindTextureUnit(B_TF_TEX_BINDING,transfer_func_tex));
     GL_EXPR(glBindTextureUnit(B_PTF_TEX_BINDING,preInt_tf_tex));
     GL_EXPR(glBindTextureUnit(B_VOL_TEX_0_BINDING,volume_texes[0]));
@@ -478,8 +510,8 @@ void BlockVolumeRenderer::bindGLTextureUnit() {
 }
 
 void BlockVolumeRenderer::deleteResource() {
-    deleteGLResource();
     deleteCUDAResource();
+    deleteGLResource();
     deleteUtilResource();
 }
 
@@ -495,7 +527,7 @@ void BlockVolumeRenderer::deleteGLResource() {
 }
 
 void BlockVolumeRenderer::deleteCUDAResource() {
-    spdlog::debug("{0}",__FUNCTION__ );
+    spdlog::info("{0}",__FUNCTION__ );
     assert(volume_texes.size()==cu_resources.size() && vol_tex_num == volume_texes.size() && vol_tex_num != 0);
     for(int i=0;i<cu_resources.size();i++){
         CUDA_DRIVER_API_CALL(cuGraphicsUnregisterResource(cu_resources[i]));
@@ -702,5 +734,17 @@ void BlockVolumeRenderer::render_volume() {
 
     glDrawArrays(GL_TRIANGLES,0,6);
 }
+
+void BlockVolumeRenderer::createQueryPoint() {
+
+    glGenBuffers(1,&query_point_ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER,query_point_ssbo);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER,sizeof(float)*8,nullptr,GL_MAP_WRITE_BIT|GL_MAP_PERSISTENT_BIT|GL_MAP_COHERENT_BIT);
+    query_point_result=(float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER,GL_WRITE_ONLY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER,1,query_point_ssbo);
+
+    GL_CHECK
+}
+
 
 

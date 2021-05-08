@@ -54,7 +54,6 @@ const Image: React.FC = () => {
             click: {
               x,
               y,
-              finished: end,
             },
           })
         );

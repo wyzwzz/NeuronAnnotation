@@ -91,3 +91,11 @@ void VolumeRenderer::clear_scene() {
     impl->clear_scene();
 }
 
+void VolumeRenderer::set_querypoint(std::array<uint32_t, 2> screen_pos) noexcept {
+    impl->set_querypoint(screen_pos);
+}
+
+auto VolumeRenderer::get_querypoint() -> const std::array<float, 8> {
+    return impl->get_querypoint();
+}
+

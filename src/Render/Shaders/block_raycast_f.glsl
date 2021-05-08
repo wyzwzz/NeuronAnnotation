@@ -12,6 +12,10 @@ layout(std430,binding=0) buffer MappingTable{
     uvec4 page_entry[];
 }mapping_table;
 
+layout(std430,binding=1) buffer QueryPoint{
+    vec4 volume_pos[];
+}queryPoint;
+
 uniform float ka;
 uniform float kd;
 uniform float shininess;
@@ -19,6 +23,9 @@ uniform float ks;
 
 uniform int window_width;
 uniform int window_height;
+
+uniform ivec2 query_point;
+uniform bool query;
 
 
 uniform float step;
@@ -45,6 +52,10 @@ vec3 phongShading(vec3 samplePos,vec3 diffuseColor);
 vec3 getVirtualOffset(vec3 samplePos);
 void main()
 {
+    bool is_query=false;
+    if(query && ivec2(gl_FragCoord.xy)==query_point){
+        is_query=true;
+    }
     int x_pos=int(gl_FragCoord.x)-window_width/2;
     int y_pos=int(gl_FragCoord.y)-window_height/2;
     vec3 ray_start_pos=view_pos+x_pos*view_right*view_right_space+y_pos*view_up*view_up_space;
@@ -89,6 +100,10 @@ void main()
             last_sample_scalar=sample_scalar;
         }
         sample_pos=sample_start_pos+i*ray_direction*step;
+    }
+    if(is_query){
+        queryPoint.volume_pos[0]=vec4(sample_pos,1.f);
+        queryPoint.volume_pos[1]=color;
     }
 
     if(color.a==0.f) discard;

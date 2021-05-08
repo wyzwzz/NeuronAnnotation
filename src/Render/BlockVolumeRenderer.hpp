@@ -16,7 +16,7 @@
 #include <Common/help_cuda.hpp>
 
 #include "ShaderProgram.hpp"
-#include <Render/Data/BlockVolumeManager.hpp>
+#include <Render/BlockData/BlockVolumeManager.hpp>
 
 struct Myhash{
     std::size_t operator()(const sv::AABB& aabb) const {
@@ -40,9 +40,13 @@ public:
 
     void set_mousekeyevent(MouseKeyEvent event) noexcept override;
 
+    void set_querypoint(std::array<uint32_t,2> screen_pos) noexcept override;
+
     void render_frame() override;
 
     auto get_frame()->const Image& override;
+
+    auto get_querypoint()->const std::array<float,8> override;
 
     void clear_scene() override;
 
@@ -82,6 +86,7 @@ private:
     //createUtilResource
     void createVirtualBoxes();
     void createMappingTable();
+    void createQueryPoint();
 
     //setupRuntimeResource
     void setupRuntimeResource();
@@ -123,6 +128,9 @@ private:
     GLuint mapping_table_ssbo;
     std::vector<uint32_t> mapping_table;
 
+    GLuint query_point_ssbo;
+    float* query_point_result;
+
     std::unordered_set<sv::AABB,Myhash> current_blocks;
     std::unordered_set<sv::AABB,Myhash> new_need_blocks,no_need_blocks;
 
@@ -155,6 +163,10 @@ private:
     std::unique_ptr<BlockVolumeManager> volume_manager;
 
     Image frame;
+
+    std::array<uint32_t,2> query_point;
+
+    bool query;
 };
 
 extern "C"{

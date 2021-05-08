@@ -11,7 +11,7 @@ if(WIN32)
             BlockVolumeRenderer_SRCS
             BlockVolumeRenderer.cpp
             Image.cpp
-            Data/BlockVolumeManager.cpp
+            BlockData/BlockVolumeManager.cpp
             ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/gl.c
             ${PROJECT_SOURCE_DIR}/third_party/glad_wgl/src/wgl.c
     )
@@ -23,7 +23,7 @@ elseif(UNIX)
             BlockVolumeRenderer_SRCS
             BlockVolumeRenderer.cpp
             Image.cpp
-            Data/BlockVolumeManager.cpp
+            BlockData/BlockVolumeManager.cpp
             ${PROJECT_SOURCE_DIR}/third_party/glad/src/glad.c
     )
     set(GLAD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/glad/include)

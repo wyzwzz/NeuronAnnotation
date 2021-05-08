@@ -30,11 +30,15 @@ public:
 
     void set_transferfunc(TransferFunction tf) noexcept;
 
+    void set_querypoint(std::array<uint32_t,2> screen_pos) noexcept;
+
     void set_mousekeyevent(MouseKeyEvent event) noexcept;
 
     void render_frame();
 
     auto get_frame()->const Image&;
+
+    auto get_querypoint()->const std::array<float,8> ;
 
     void clear_scene();
 

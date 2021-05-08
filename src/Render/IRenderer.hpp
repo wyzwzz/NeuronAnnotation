@@ -18,9 +18,13 @@ public:
 
     virtual void set_mousekeyevent(MouseKeyEvent event) noexcept=0;
 
+    virtual void set_querypoint(std::array<uint32_t,2> screen_pos) noexcept=0;
+
     virtual void render_frame()=0;
 
     virtual auto get_frame()->const Image& =0;
+
+    virtual auto get_querypoint()->const std::array<float,8> =0;
 
     virtual void clear_scene()=0;
 
