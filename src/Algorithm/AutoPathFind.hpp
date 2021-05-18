@@ -38,6 +38,7 @@ public:
             return cost>node->cost;
         }
     };
+    //ref https://www.cs.cornell.edu/courses/cs4670/2012fa/projects/p1_iscissors/project1.html#to_do
     std::vector<std::array<float,4>> GenPath_v1(const Map<float>& map){
         point0[0]=map.height-point0[0];
         point1[0]=map.height-point1[0];

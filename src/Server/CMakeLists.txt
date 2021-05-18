@@ -20,6 +20,10 @@ target_include_directories(NeuronAnnotateServer PRIVATE
 target_link_libraries(NeuronAnnotateServer PRIVATE
         Poco::Net
         Poco::Util
+        Poco::MongoDB
+        Poco::JSON
+        Poco::Foundation
+
         spdlog::spdlog
         Threads::Threads
         glm::glm

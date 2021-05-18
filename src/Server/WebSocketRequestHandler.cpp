@@ -8,6 +8,7 @@
 #include <Poco/Net/NetException.h>
 #include <Poco/Net/WebSocket.h>
 #include <Poco/Util/Application.h>
+#include <Poco/MongoDB/Database.h>
 
 #include <seria/deserialize.hpp>
 #include <iostream>
