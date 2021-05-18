@@ -3,6 +3,7 @@
 #include <Image.hpp>
 #include <TransferFunction.hpp>
 #include <VolumeRenderer.hpp>
+#include <Algorithm/AutoPathFind.hpp>
 
 #include <Poco/Net/NetException.h>
 #include <Poco/Net/WebSocket.h>
@@ -10,6 +11,7 @@
 
 #include <seria/deserialize.hpp>
 #include <iostream>
+
 using Poco::Util::Application;
 
 void WebSocketRequestHandler::handleRequest(
@@ -69,18 +71,39 @@ void WebSocketRequestHandler::handleRequest(
                 }
                 else if(document.HasMember("click"))
                 {
+                    std::cout<<"[click]:"<<std::endl;
                     auto values=objects["click"].GetObject();
                     QueryPoint query_point;
                     seria::deserialize(query_point,values);
                     block_volume_renderer.set_querypoint({query_point.x,query_point.y});
+                    std::cout<<"query point: "<<query_point.x<<" "<<query_point.y<<std::endl;
                 }
+
                 block_volume_renderer.render_frame();
                 auto &image = block_volume_renderer.get_frame();
+
+                if(document.HasMember("click")){
+                    std::cout<<"[query result]"<<std::endl;
+                    auto query_res=block_volume_renderer.get_querypoint();
+                    std::cout<<"pos: "<<query_res[0]<<" "<<query_res[1]<<" "<<query_res[2]<<" "<<query_res[3]<<std::endl;
+                    std::cout<<"color: "<<query_res[4]<<" "<<query_res[5]<<" "<<query_res[6]<<" "<<query_res[7]<<std::endl;
+                }
+                if(document.HasMember("AutoPathGen")){
+                    std::cout<<"[AutoPathGen]"<<std::endl;
+                    auto& pos_image=block_volume_renderer.get_pos_frame();
+                    auto values=objects["AutoPathGen"].GetObject();
+                    AutoPathGen auto_path_gen;
+                    seria::deserialize(auto_path_gen,values);
+                    auto path=auto_path_gen.GenPath_v1(pos_image);
+//                    for(auto& it:path){
+//                        print_array(it);
+//                    }
+                }
+
+
                 auto encoded = Image::encode(image, Image::Format::JPEG);
-                auto query_res=block_volume_renderer.get_querypoint();
-                std::cout<<"pos: "<<query_res[0]<<" "<<query_res[1]<<" "<<query_res[2]<<" "<<query_res[3]<<std::endl;
-                std::cout<<"color: "<<query_res[4]<<" "<<query_res[5]<<" "<<query_res[6]<<" "<<query_res[7]<<std::endl;
                 ws.sendFrame(encoded.data.data(), encoded.data.size(),WebSocket::FRAME_BINARY);
+
             }
             catch (std::exception& error)
             {

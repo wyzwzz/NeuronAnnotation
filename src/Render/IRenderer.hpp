@@ -22,7 +22,9 @@ public:
 
     virtual void render_frame()=0;
 
-    virtual auto get_frame()->const Image& =0;
+    virtual auto get_frame()->const Image& = 0;
+
+    virtual auto get_pos_frame()->const Map<float>& = 0;
 
     virtual auto get_querypoint()->const std::array<float,8> =0;
 

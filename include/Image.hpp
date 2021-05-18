@@ -6,6 +6,9 @@
 #define NEURONANNOTATION_IMAGE_H
 #include <cstdint>
 #include <vector>
+#include <array>
+#include <cassert>
+#include <stdexcept>
 class Image{
 public:
     Image()=default;
@@ -30,4 +33,24 @@ public:
                         Image::Quality Quality = Image::Quality::MEDIUM);
 };
 
+template<class T>
+class Map{
+public:
+    Map()=default;
+    std::array<T,4> at(int row,int col) const{
+        if(row>=0 && row <height && col>=0 && col<width){
+            assert(channels==4);
+            size_t idx=((size_t)row*width+col)*4;
+            return {data[idx],data[idx+1],data[idx+2],data[idx+3]};
+        }
+        else{
+            throw std::runtime_error("Map's vector out of range");
+        }
+    }
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint8_t channels = 0;
+    std::vector<T> data = {};
+
+};
 #endif //NEURONANNOTATION_IMAGE_H

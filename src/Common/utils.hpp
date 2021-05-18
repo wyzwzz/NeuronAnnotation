@@ -87,7 +87,7 @@ void print_array(const std::array<T,N>& arr)
     for(size_t i=0;i<N;i++){
         std::cout<<arr[i]<<" ";
     }
-    std::cout<<") ";
+    std::cout<<") "<<std::endl;
 }
 
 template <int N,class T>

@@ -25,6 +25,9 @@ const Image: React.FC = () => {
     let lastTarget = [0, 0, -1];
     let lastUp = [0, 1, 0];
     let lastZoom = 20.0;
+    let first_point=true;
+    let lastX=0.0;
+    let lastY=0.0;
 
     const ws = new WebSocket("ws://127.0.0.1:12121/render");
     ws.binaryType = "arraybuffer";
@@ -57,6 +60,21 @@ const Image: React.FC = () => {
             },
           })
         );
+        if(first_point){
+          first_point=false;
+        }
+        else{
+          ws.send(
+              JSON.stringify({
+                AutoPathGen: {
+                  point0:[lastY,lastX],
+                  point1:[y,x],
+                },
+              })
+          );
+        }
+        lastX=x;
+        lastY=y;
       };
       ws.send(
         JSON.stringify({

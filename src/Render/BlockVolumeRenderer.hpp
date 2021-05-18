@@ -46,6 +46,8 @@ public:
 
     auto get_frame()->const Image& override;
 
+    auto get_pos_frame()->const Map<float>& override;
+
     auto get_querypoint()->const std::array<float,8> override;
 
     void clear_scene() override;
@@ -78,6 +80,7 @@ private:
     void createGLTexture();
     void createGLSampler();
     void createGLShader();
+    void createFrameTexture();
 
     //createCUDAResource
     void createCUgraphics();
@@ -163,6 +166,8 @@ private:
     std::unique_ptr<BlockVolumeManager> volume_manager;
 
     Image frame;
+    Map<float> pos_frame;
+    GLuint pos_frame_tex;
 
     std::array<uint32_t,2> query_point;
 

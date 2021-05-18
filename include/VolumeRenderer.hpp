@@ -38,6 +38,8 @@ public:
 
     auto get_frame()->const Image&;
 
+    auto get_pos_frame()->const Map<float>&;
+
     auto get_querypoint()->const std::array<float,8> ;
 
     void clear_scene();

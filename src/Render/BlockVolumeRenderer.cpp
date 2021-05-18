@@ -177,6 +177,17 @@ auto BlockVolumeRenderer::get_frame() -> const Image & {
                  reinterpret_cast<void *>(frame.data.data()));
     return frame;
 }
+auto BlockVolumeRenderer::get_pos_frame() -> const Map<float> & {
+    pos_frame.width=window_width;
+    pos_frame.height=window_height;
+    pos_frame.channels=4;
+    pos_frame.data.resize(window_width*window_height*4);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glGetTextureImage(pos_frame_tex,0,GL_RGBA,GL_FLOAT,pos_frame.data.size()*sizeof(float),reinterpret_cast<void*>(pos_frame.data.data()));
+
+    return pos_frame;
+}
+
 auto BlockVolumeRenderer::get_querypoint() -> const std::array<float, 8> {
 
     return std::array<float, 8>{query_point_result[0],
@@ -309,7 +320,7 @@ void BlockVolumeRenderer::createGLResource() {
     createMappingTable();
     createScreenQuad();
     createGLShader();
-
+    createFrameTexture();
 
 }
 
@@ -446,6 +457,7 @@ void BlockVolumeRenderer::setupRuntimeResource() {
 #define B_VOL_TEX_0_BINDING 2
 #define B_VOL_TEX_1_BINDING 3
 #define B_VOL_TEX_2_BINDING 4
+#define B_POS_TEX_BINDING 5
 
 void BlockVolumeRenderer::setupShaderUniform() {
 //    spdlog::info("{0}",__FUNCTION__ );
@@ -745,6 +757,15 @@ void BlockVolumeRenderer::createQueryPoint() {
 
     GL_CHECK
 }
+
+void BlockVolumeRenderer::createFrameTexture() {
+    glGenTextures(1,&pos_frame_tex);
+    glBindTexture(GL_TEXTURE_2D,pos_frame_tex);
+    glBindTextureUnit(B_POS_TEX_BINDING,pos_frame_tex);
+    glTextureStorage2D(pos_frame_tex,1,GL_RGBA32F,window_width,window_height);
+    glBindImageTexture(0,pos_frame_tex,0,GL_FALSE,0,GL_READ_WRITE,GL_RGBA32F);
+}
+
 
 
 

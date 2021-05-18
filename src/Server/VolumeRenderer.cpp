@@ -99,3 +99,7 @@ auto VolumeRenderer::get_querypoint() -> const std::array<float, 8> {
     return impl->get_querypoint();
 }
 
+auto VolumeRenderer::get_pos_frame() -> const Map<float> & {
+    return impl->get_pos_frame();
+}
+
